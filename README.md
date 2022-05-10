@@ -16,5 +16,6 @@ An open source scanner for E-Pajak forms.
 - Opencv-Python
 - pyzbar
 - urllib3
+- numpy
 ### Licensing
 EPajak-Scanner is available under MIT license.
