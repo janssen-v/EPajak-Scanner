@@ -9,7 +9,7 @@ An open source scanner for E-Pajak forms.
 #### Bahasa Indonesia
 1. Jalankan epajakscanner.py.
 2. Scan kode QR dalam faktur pajak dengan webcam.
-3. Tekan S untuk menyimpan faktur dalam format CSV (export.csv).
+3. Tekan S untuk menyimpan faktur sebagai file CSV (export.csv).
 
 ## Documentation
 ### Package dependencies
