@@ -1,18 +1,17 @@
-from cgitb import enable, text
-import PySimpleGUI as sg
-import cv2
-import traceback
-import urllib3
-import numpy as np
-import pyzbar.pyzbar as pyzbar
-import xml.etree.ElementTree as ElementTree
 import csv
 import os
 import sys
+import traceback
+import xml.etree.ElementTree as ElementTree
+
+import PySimpleGUI as sg
+import cv2
+import numpy as np
+import pyzbar.pyzbar as pyzbar
+import urllib3
+
 
 # E-Pajak Parse
-
-# noinspection PyBroadException
 def get_xml(url):
     http = urllib3.PoolManager()
     response = http.request('GET', url)
@@ -62,10 +61,10 @@ def export_csv(output_file, form_list, mode):
         output_file (string): File name of CSV export
         form_list (list(dict)): List of tax forms in dict format
     """
-    
+
     # MODE Selector
     F_MK = 'FK' if mode else 'FM'
-    
+
     header = [F_MK, 'KD_JENIS_TRANSAKSI', 'FG_PENGGANTI', 'NOMOR_FAKTUR', 'MASA_PAJAK', 'TAHUN_PAJAK',
               'TANGGAL_FAKTUR', 'NPWP', 'NAMA', 'ALAMAT_LENGKAP', 'JUMLAH_DPP', 'JUMLAH_PPN', 'JUMLAH_PPNBM',
               'IS_CREDITABLE']
@@ -91,8 +90,8 @@ def export_csv(output_file, form_list, mode):
                          form.get('jumlahPpnBm'),
                          '1']
             writer.writerow(data_line)
-            
-            
+
+
 def parse_url(url):
     xml = get_xml(url)
     form = parse_xml(xml)
@@ -109,6 +108,7 @@ def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
 
+
 # App Event Loop
 
 # Globals
@@ -117,11 +117,10 @@ MODE = True
 # Window Layout
 output_path = ''
 form_list = []
-left_col = [[sg.Text('Faktur Tersimpan', font='ArialBold 12', pad=(15,0))],
-            [sg.Listbox(values= form_list, enable_events=True, size=(35,28), key = '-FORM LIST-')],
-            [sg.Button('Export CSV', key='-EXPORT-'), sg.Button('Faktur Keluar', key='-MODE-'), sg.Button('Start Scan', key='-SCAN-')]]
-
-            
+left_col = [[sg.Text('Faktur Tersimpan', font='ArialBold 12', pad=(15, 0))],
+            [sg.Listbox(values=form_list, enable_events=True, size=(35, 28), key='-FORM LIST-')],
+            [sg.Button('Export CSV', key='-EXPORT-'), sg.Button('Faktur Keluar', key='-MODE-'),
+             sg.Button('Start Scan', key='-SCAN-')]]
 
 viewport_col = [[sg.Image(filename='', key='-FRAME-')]]
 # Full Layout
@@ -132,22 +131,23 @@ icons = resource_path('epjs.ico')
 window = sg.Window('E-Pajak QR Scanner', layout, grab_anywhere=True, icon=icons)
 
 # Run Event Loop
-url_list = [] # url list persistence since scan may be started and stopped
+url_list = []  # url list persistence since scan may be started and stopped
 while True:
     event, values = window.read()
     if event in (None, 'Exit'):
         break
     # Start Scanner
     if event == '-SCAN-':
-        sg.popup_quick_message('Initializing Scanner', auto_close_duration=0.5, background_color='red', text_color='white', font='Any 16')
+        sg.popup_quick_message('Initializing Scanner', auto_close_duration=0.5, background_color='red',
+                               text_color='white', font='Any 16')
         window['-SCAN-'].update('Stop Scan', button_color=('white', 'red'))
         cap = cv2.VideoCapture(0)
-        
+
         while True:
             ret, frame = cap.read()
             im = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             decoded_objects = decode(im)
-            
+
             for decodedObject in decoded_objects:
                 points = decodedObject.polygon
 
@@ -175,9 +175,9 @@ while True:
                     cv2.putText(frame, 'SCANNING', (x, y), cv2.FONT_HERSHEY_SIMPLEX,
                                 1, (51, 153, 255), 2, cv2.LINE_AA)
                     url_list.append(url)
-                    single_form = parse_url(url) 
+                    single_form = parse_url(url)
                     form_list.append(single_form)
-                    window['-FORM LIST-'].update(values= [form['nomorFaktur'] for form in form_list])
+                    window['-FORM LIST-'].update(values=[form['nomorFaktur'] for form in form_list])
                 else:
                     # Draw the convex hull
                     for j in range(0, n):
@@ -185,8 +185,7 @@ while True:
                     # Draw text on image frame
                     cv2.putText(frame, 'SCAN OK', (x, y), cv2.FONT_HERSHEY_SIMPLEX,
                                 1, (0, 204, 0), 2, cv2.LINE_AA)
-                
-                
+
             # Show frame in viewport
             imgbytes = cv2.imencode('.png', frame)[1].tobytes()
             window['-FRAME-'].update(data=imgbytes)
@@ -196,7 +195,7 @@ while True:
                 window['-FRAME-'].update('')
                 cap.release()
                 break
-            
+
     # Update Mode Indicator
     if event == '-MODE-':
         # Mode true = FK, false = FM
@@ -205,13 +204,12 @@ while True:
             window['-MODE-'].update('Faktur Keluar')
         else:
             window['-MODE-'].update('Faktur Masuk')
-    
+
     # Handle Export Button
     if event == '-EXPORT-':
         try:
-            output_path = sg.popup_get_file('Export Forms as CSV', save_as=True, file_types=(('Comma Separated Value', '*.csv'),),icon=icons)
+            output_path = sg.popup_get_file('Export Forms as CSV', save_as=True,
+                                            file_types=(('Comma Separated Value', '*.csv'),), icon=icons)
             export_csv(output_path, form_list, MODE)
         except:
             continue
-    
-            
