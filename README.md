@@ -1,3 +1,4 @@
+![Project Logo](http://url/to/img.png](https://github.com/janssen-v/EPajak-Scanner/blob/master/logo.png)
 # EPajak-Scanner
 An open source scanner for E-Pajak forms. Format compatible with the e-faktur pajak application (v3.2).
 ### Important Notice
